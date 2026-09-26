@@ -432,7 +432,9 @@ export default function (pi: ExtensionAPI) {
       if (typeof rawPath === "string") {
         const targetPath = path.isAbsolute(rawPath) ? path.normalize(rawPath) : path.resolve(cwd, rawPath);
 
-        if (!targetPath.startsWith(cwd)) {
+        const rel = path.relative(cwd, targetPath);
+        const isOutside = rel === ".." || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel);
+        if (isOutside) {
           return deny("tool", rawPath, `Path "${rawPath}" is outside the project workspace (${cwd}).`);
         }
 

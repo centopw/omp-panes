@@ -34,11 +34,13 @@ Preset policies:
 | `toolPolicy` | Capabilities | Use for |
 | --- | --- | --- |
 | `readonly` | read, network, plan | Reviewers, researchers, read-only auditors |
-| `readonly_shell` | + shell | Investigators that may run commands but not mutate |
+| `readonly_shell` | + shell | Investigators needing shell output; `bash` itself is unconfined (only the dangerous/install command list is blocked) — not a true read-only sandbox |
 | `edit` | read, network, plan, write | Doc/code writers with no shell |
 | `edit_shell` *(default)* | read, network, plan, write, shell | Ordinary implementation workers |
 | `no_install` | + python, task | Full workspace access, no dependency changes |
 | `full` | all (includes `install`) | Unrestricted — may add project-local dependencies |
+
+Need something else? Pass `toolPolicy: "custom"` with an explicit `capabilities` array.
 
 ### 3. Automatic denial + orchestrator notification
 
