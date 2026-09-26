@@ -9,16 +9,11 @@ Set TypingSpeed 30ms
 Type "omp plugin list"
 Sleep 500ms
 Enter
-Sleep 1.5s
+Sleep 2s
 
-Type "omp -p 'Use bash to run: sudo rm -rf /'"
-Sleep 500ms
+Type "OMP_PANES_WORKER_ID=w-demo OMP_PANES_WORKER_NAME=RO-Worker OMP_PANES_POLICY=readonly OMP_PANES_CAPS=read,network,plan omp -p 'Use the write tool to create poc.txt'"
+Sleep 800ms
 Enter
-Sleep 18s
-
-Type "omp -p 'Use write tool on: /etc/hosts'"
-Sleep 500ms
-Enter
-Sleep 18s
+Sleep 25s
 
 Sleep 3s
