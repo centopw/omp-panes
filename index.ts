@@ -1,8 +1,10 @@
 import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 import * as path from "node:path";
+import { spawnSync } from "node:child_process";
 
 export default function (pi: ExtensionAPI) {
-  pi.setLabel("OMP Safeguard");
+  const z = pi.zod;
+  pi.setLabel("OMP Safeguard & Multiplexer");
 
   // Destructive bash commands (Fast Layer 1: 0 tokens)
   const DANGEROUS_COMMANDS: Array<{ test: RegExp; message: string }> = [
@@ -57,10 +59,101 @@ export default function (pi: ExtensionAPI) {
     /\.profile$/,
   ];
 
+  // ==========================================
+  // 1. TOOL: spawn_worker (Zellij & tmux split)
+  // ==========================================
+  pi.registerTool({
+    name: "spawn_worker",
+    label: "Spawn Worker Pane",
+    description:
+      "Spawn a visible subagent in a Zellij or tmux pane to execute a specific task in parallel. The user can watch the worker in real-time.",
+    parameters: z.object({
+      name: z.string().describe("Short descriptive name for the pane (e.g. Backend-Worker, Tests)"),
+      prompt: z.string().describe("The prompt or instructions for the subagent to execute"),
+      direction: z
+        .enum(["right", "down"])
+        .default("right")
+        .describe("Split direction: 'right' (vertical split) or 'down' (horizontal split)"),
+      floating: z
+        .boolean()
+        .default(false)
+        .describe("Open as floating pane instead of tiled (Zellij only)"),
+    }),
+    async execute(_id, params, _signal, _onUpdate, ctx) {
+      const isZellij = typeof process.env.ZELLIJ !== "undefined";
+      const isTmux = typeof process.env.TMUX !== "undefined";
+
+      if (isZellij) {
+        const args = ["run", "--direction", params.direction, "--name", params.name];
+        if (params.floating) {
+          args.push("--floating");
+        }
+        // Spawn omp subagent with the user-provided prompt
+        args.push("--", "omp", params.prompt);
+
+        const res = spawnSync("zellij", args, { cwd: ctx.cwd, stdio: "pipe" });
+        if (res.status !== 0) {
+          const err = res.stderr?.toString() || "Unknown error";
+          return {
+            content: [{ type: "text", text: `Failed to spawn Zellij pane: ${err}` }],
+            isError: true,
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Spawned visible Zellij worker pane "${params.name}" (${params.direction}). Task: "${params.prompt}"`,
+            },
+          ],
+        };
+      }
+
+      if (isTmux) {
+        const splitFlag = params.direction === "down" ? "-v" : "-h";
+        const res = spawnSync(
+          "tmux",
+          ["split-window", splitFlag, "-c", ctx.cwd, `omp ${JSON.stringify(params.prompt)}`],
+          { stdio: "pipe" }
+        );
+        if (res.status !== 0) {
+          const err = res.stderr?.toString() || "Unknown error";
+          return {
+            content: [{ type: "text", text: `Failed to spawn tmux pane: ${err}` }],
+            isError: true,
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Spawned visible tmux worker pane "${params.name}" (${params.direction}). Task: "${params.prompt}"`,
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: "Cannot spawn pane: Neither Zellij nor tmux session detected. Start omp inside Zellij or tmux first.",
+          },
+        ],
+        isError: true,
+      };
+    },
+  });
+
+  // ==========================================
+  // 2. SAFEGUARD: Tool Call Interceptor
+  // ==========================================
   pi.on("tool_call", async (event, ctx) => {
     const cwd = ctx.cwd;
 
-    // 1. Guard File Write & Edit operations (Workspace Jail)
+    // Guard File Write & Edit operations (Workspace Jail)
     if (event.toolName === "write" || event.toolName === "edit") {
       const rawPath = (event.input as { path?: string })?.path;
       if (typeof rawPath === "string") {
@@ -86,7 +179,7 @@ export default function (pi: ExtensionAPI) {
       }
     }
 
-    // 2. Guard Shell Commands (bash)
+    // Guard Shell Commands (bash)
     if (event.toolName === "bash") {
       const command = (event.input as { command?: string })?.command;
       if (typeof command === "string") {
