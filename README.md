@@ -1,5 +1,7 @@
 # omp-safeguard
 
+![Demo](demo.gif)
+
 Deterministic safety guardrails for `omp`.
 
 - **Layer 1 (Fast & 0 tokens):** Local regex checks block `rm -rf /`, `sudo`, disk formats, global package managers (`npm -g`, `pip`, `brew`), and credential reads.
