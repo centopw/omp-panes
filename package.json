@@ -1,0 +1,22 @@
+{
+  "name": "omp-safeguard",
+  "version": "1.0.0",
+  "description": "Deterministic safety guardrails for OMP agents",
+  "main": "index.ts",
+  "omp": {
+    "extensions": [
+      "index.ts"
+    ]
+  },
+  "pi": {
+    "extensions": [
+      "index.ts"
+    ]
+  },
+  "keywords": [
+    "omp-plugin",
+    "safety",
+    "guardrails"
+  ],
+  "license": "MIT"
+}
