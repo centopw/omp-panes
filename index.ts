@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 
 export default function (pi: ExtensionAPI) {
   const z = pi.zod;
-  pi.setLabel("OMP Safeguard & Multiplexer");
+  pi.setLabel("OMP Panes");
 
   // Destructive bash commands (Fast Layer 1: 0 tokens)
   const DANGEROUS_COMMANDS: Array<{ test: RegExp; message: string }> = [

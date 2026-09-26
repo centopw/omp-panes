@@ -1,6 +1,6 @@
-# omp-safeguard
+# omp-panes
 
-A native `omp` plugin that **spawns visible subagents into Zellij / tmux panes** and **enforces guardrails** so workers cannot harm your system.
+A native `omp` plugin that **spawns visible subagents into Zellij & tmux panes** with built-in guardrails so workers cannot harm your system.
 
 ![Demo](demo.gif)
 
@@ -20,12 +20,12 @@ Allows the lead orchestrator to spawn visible subagents into split or floating p
 ## Installation
 
 ```bash
-omp plugin install https://github.com/centopw/omp-safeguard.git
+omp plugin install https://github.com/centopw/omp-panes.git
 ```
 
 Or link locally:
 ```bash
-omp plugin link ./omp-safeguard
+omp plugin link ./omp-panes
 ```
 
 ## Usage
